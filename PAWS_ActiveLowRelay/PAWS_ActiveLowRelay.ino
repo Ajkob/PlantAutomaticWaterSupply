@@ -71,12 +71,18 @@ const int timeZone = 7;     // Indo China Time
 WiFiUDP Udp;
 //unsigned int localPort = 8888;  // local port to listen for UDP packets
 uint16_t localPort;  // local port to listen for UDP packets
-
+/* for active High
 int PumpState = LOW;
 int Valve1State = LOW;
 int Valve2State = LOW;
 int Valve3State = LOW;
 int Valve4State = LOW;
+*/
+int PumpState = HIGH;
+int Valve1State = HIGH;
+int Valve2State = HIGH;
+int Valve3State = HIGH;
+int Valve4State = HIGH;
 int timer = 0;
 
 void setup() 
@@ -156,30 +162,45 @@ void loop()
     readDht(dht, &t_dht, &h_dht, &hic_dht);
   }
 */
+/* for active High
   PumpState = LOW;
   Valve1State = LOW;
   Valve2State = LOW;
   Valve3State = LOW;
   Valve4State = LOW;
+*/
+  PumpState = HIGH;
+  Valve1State = HIGH;
+  Valve2State = HIGH;
+  Valve3State = HIGH;
+  Valve4State = HIGH; 
   timer = (now() % 72) / 3; //Simulate timer 0..23
   //timer = hour();
 
   switch(timer){
     case 8:
-      PumpState = HIGH;
-      Valve1State = HIGH;
+      /*PumpState = HIGH;
+      Valve1State = HIGH;*/
+      PumpState = LOW;
+      Valve1State = LOW;
       break;
     case 11:
-      PumpState = HIGH;
-      Valve2State = HIGH;
+      /*PumpState = HIGH;
+      Valve2State = HIGH;*/
+      PumpState = LOW;
+      Valve2State = LOW;      
       break;
     case 14:
-      PumpState = HIGH;
-      Valve3State = HIGH;
+      /*PumpState = HIGH;
+      Valve3State = HIGH;*/
+      PumpState = LOW;
+      Valve3State = LOW; 
       break;
     case 17:
-      PumpState = HIGH;
-      Valve4State = HIGH;
+     /* PumpState = HIGH;
+      Valve4State = HIGH;*/
+      PumpState = LOW;
+      Valve4State = LOW;       
       break;
   }
 /*
@@ -255,11 +276,11 @@ void digitalClockDisplay(){
   //printDigitsLCD(second());
 
   lcd.setCursor(3,1);
-  lcd.print(PumpState);
-  lcd.print(Valve1State);
-  lcd.print(Valve2State);
-  lcd.print(Valve3State);
-  lcd.print(Valve4State);
+  lcd.print(!PumpState);
+  lcd.print(!Valve1State);
+  lcd.print(!Valve2State);
+  lcd.print(!Valve3State);
+  lcd.print(!Valve4State);
   lcd.print(" ");
   printDigitsLCD(timer);
   
