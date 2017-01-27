@@ -20,7 +20,7 @@
 #define VALVE1PIN 14  //GPIO14 (D5)
 #define VALVE2PIN 12  //GPIO12 (D6)
 #define VALVE3PIN 13  //GPIO13 (D7)
-#define VALVE4PIN 15  //GPIO15 (D8)
+#define VALVE4PIN 2  //GPIO2 (D4)
 
 /*
 #define DHTPIN 14     // what pin we're connected to GPIO14 (D5)
