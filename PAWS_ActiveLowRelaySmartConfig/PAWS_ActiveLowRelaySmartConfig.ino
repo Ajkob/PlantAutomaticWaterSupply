@@ -1,6 +1,6 @@
 /*
- * Time_NTP.pde
- * Example showing time sync to NTP time source
+ * Plant Automatic Water Supply
+ * Control via Time get from NTP server
  *
  * This sketch uses the ESP8266WiFi library
  */
@@ -15,6 +15,32 @@
 #include <TimeLib.h> 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
+
+//needed for library
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+
+//for LED status
+#include <Ticker.h>
+Ticker ticker;
+
+void tick()
+{
+  //toggle state
+  int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
+  digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
+}
+
+//gets called when WiFiManager enters configuration mode
+void configModeCallback (WiFiManager *myWiFiManager) {
+  Serial.println("Entered config mode");
+  Serial.println(WiFi.softAPIP());
+  //if you used auto generated SSID, print it
+  Serial.println(myWiFiManager->getConfigPortalSSID());
+  //entered config mode, make led toggle faster
+  ticker.attach(0.2, tick);
+}
 
 #define PUMPPIN 16    //GPIO16 (D0)
 #define VALVE1PIN 14  //GPIO14 (D5)
@@ -41,8 +67,8 @@
 DHT *dht;
 */
 
-const char ssid[] = "itbakery-wifi";   // your network SSID (name)
-const char pass[] = "itbakery@9"; // your network password
+//const char ssid[] = "itbakery-wifi";   // your network SSID (name)
+//onst char pass[] = "itbakery@9"; // your network password
 
 // Initial I2C-LCD
 // Address is 0x27 (for PCF8574) or 0x3F (for PCF8574A)
@@ -90,6 +116,8 @@ void setup()
   lcd.init(); // Start
   lcd.backlight(); // Enable LED backlight
 
+  Serial.begin(115200);
+  //while (!Serial) ; // Needed for Leonardo only
   //initDht(&dht, DHTPIN, DHTTYPE);
 //Set mode of GPIO
   pinMode(PUMPPIN, OUTPUT);
@@ -97,6 +125,38 @@ void setup()
   pinMode(VALVE2PIN, OUTPUT);
   pinMode(VALVE3PIN, OUTPUT);
   pinMode(VALVE4PIN, OUTPUT);
+
+  //set led pin as output
+  pinMode(BUILTIN_LED, OUTPUT);
+  // start ticker with 0.5 because we start in AP mode and try to connect
+  ticker.attach(0.6, tick);
+
+  //WiFiManager
+  //Local intialization. Once its business is done, there is no need to keep it around
+  WiFiManager wifiManager;
+  //reset settings - for testing
+  //wifiManager.resetSettings();
+
+  //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
+  wifiManager.setAPCallback(configModeCallback);
+
+  //fetches ssid and pass and tries to connect
+  //if it does not connect it starts an access point with the specified name
+  //here  "AutoConnectAP"
+  //and goes into a blocking loop awaiting configuration
+  if (!wifiManager.autoConnect()) {
+    Serial.println("failed to connect and hit timeout");
+    //reset and try again, or maybe put it to deep sleep
+    ESP.reset();
+    delay(1000);
+  }
+
+  //if you get here you have connected to the WiFi
+  Serial.println("connected... :) to " + String(WiFi.SSID()));
+  ticker.detach();
+  //keep LED on
+  digitalWrite(BUILTIN_LED, LOW);
+  
   
 //Clear all output to "OFF" stage
   digitalWrite(PUMPPIN, PumpState);
@@ -105,14 +165,14 @@ void setup()
   digitalWrite(VALVE3PIN, Valve3State);
   digitalWrite(VALVE4PIN, Valve4State);  
     
-  Serial.begin(115200);
-  //while (!Serial) ; // Needed for Leonardo only
-  delay(250);
-  Serial.println();
-  Serial.println(String("Connecting to ") + ssid);
+
+//  delay(250);
+//  Serial.println();
+//  Serial.println(String("Connecting to ") + ssid);
   lcd.setCursor(0,0);
-  lcd.print(String("SSID:") + ssid);
-  WiFi.begin(ssid, pass);
+  lcd.print(String("SSID:") + String(WiFi.SSID()));
+  delay(2000);
+  //WiFi.begin(ssid, pass);
 
   int count=0;
   while (WiFi.status() != WL_CONNECTED) {
